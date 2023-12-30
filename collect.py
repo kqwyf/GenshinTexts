@@ -1,4 +1,3 @@
-import os
 import pickle
 import copy
 import json
@@ -104,7 +103,7 @@ def getAttr(obj, key):
 def addResult(stack, results):
     if len(stack) > 0:
         results.append(copy.deepcopy(stack))
-        if len(results) > 500:
+        if len(results) > 50:
             return False
     return True
 
@@ -123,8 +122,9 @@ def dfsTalk(talk, results, isPlayer, stack, talkSet, dialogSet, n):
     talkSet.add(talk.id)
     if talk.initDialog != -1 and talk.initDialog in dialogDict:
         if talk.initDialog not in dialogSet:
-            dfsDialog(dialogDict[talk.initDialog], results, isPlayer,
-                      talk.nextTalks, stack, talkSet, dialogSet, n + 1)
+            if not dfsDialog(dialogDict[talk.initDialog], results, isPlayer,
+                             talk.nextTalks, stack, talkSet, dialogSet, n + 1):
+                return False
         else:
             if not addResult(stack, results):
                 return False
@@ -137,8 +137,10 @@ def dfsTalk(talk, results, isPlayer, stack, talkSet, dialogSet, n):
                     flag = True
                 elif dialogId not in dialogSet:
                     flag = True
-                    dfsDialog(dialogDict[dialogId], results, isPlayer,
-                              talk.nextTalks, stack, talkSet, dialogSet, n + 1)
+                    if not dfsDialog(dialogDict[dialogId], results, isPlayer,
+                                     talk.nextTalks, stack, talkSet, dialogSet,
+                                     n + 1):
+                        return False
             if not flag:
                 if not addResult(stack, results):
                     return False
@@ -163,9 +165,10 @@ def dfsDialog(dialog, results, isPlayer, nextTalks, stack, talkSet, dialogSet,
         for nextId in dialog.nextDialogs:
             if nextId in dialogDict and nextId not in dialogSet:
                 flag = True
-                dfsDialog(dialogDict[nextId], results,
-                          len(dialog.nextDialogs) > 1, nextTalks, stack,
-                          talkSet, dialogSet, n + 1)
+                if not dfsDialog(dialogDict[nextId], results,
+                                 len(dialog.nextDialogs) > 1, nextTalks, stack,
+                                 talkSet, dialogSet, n + 1):
+                    return False
         if not flag:
             if not addResult(stack, results):
                 return False
@@ -174,8 +177,9 @@ def dfsDialog(dialog, results, isPlayer, nextTalks, stack, talkSet, dialogSet,
         for nextId in nextTalks:
             if nextId in talkDict and nextId not in talkSet:
                 flag = True
-                dfsTalk(talkDict[nextId], results, len(nextTalks) > 1, stack,
-                        talkSet, dialogSet, n + 1)
+                if not dfsTalk(talkDict[nextId], results, len(nextTalks) > 1, stack,
+                               talkSet, dialogSet, n + 1):
+                    return False
         if not flag:
             if not addResult(stack, results):
                 return False
@@ -271,7 +275,7 @@ def bfs(obj):
                         if not addItem(i, nextId, dialogSet, dialogDict,
                                        parentId):
                             return None
-            else:
+            elif parentId in talkDict:
                 for nextId in talkDict[parentId].nextTalks:
                     if nextId in talkDict and nextId not in talkSet:
                         flag = True
@@ -386,6 +390,10 @@ def main():
             for role, talkRoleNameTextMapHash, talkContentTextMapHash in result:
                 if role == 0:
                     roleName = "`Traveller`"
+                elif role == -2:
+                    roleName = "`Narrator`"
+                elif role == -3:
+                    roleName = "`Mate`"
                 elif talkRoleNameTextMapHash in textMap and \
                         len(textMap[talkRoleNameTextMapHash]) > 0:
                     roleName = textMap[talkRoleNameTextMapHash]
@@ -419,6 +427,10 @@ def main():
             for role, talkRoleNameTextMapHash, talkContentTextMapHash in result:
                 if role == 0:
                     roleName = "`Traveller`"
+                elif role == -2:
+                    roleName = "`Narrator`"
+                elif role == -3:
+                    roleName = "`Mate`"
                 elif talkRoleNameTextMapHash in textMap and \
                         len(textMap[talkRoleNameTextMapHash]) > 0:
                     roleName = textMap[talkRoleNameTextMapHash]

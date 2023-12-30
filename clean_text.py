@@ -220,7 +220,8 @@ def filter_empty_traces(data):
     }
     return result, stats
 
-def replace_character_names(data, traveller_name, wanderer_name, system_name):
+def replace_character_names(data, traveller_name, mate_name, wanderer_name,
+                            system_name, narrator_name, unknown_name):
     result = {}
     for key in tqdm.tqdm(data):
         newTalk = []
@@ -233,6 +234,15 @@ def replace_character_names(data, traveller_name, wanderer_name, system_name):
                 elif dialog["role"] == 0:
                     newDialog = copy.deepcopy(dialog)
                     newDialog["roleName"] = traveller_name
+                elif dialog["role"] == -1 or dialog["roleName"] == "`unknown`":
+                    newDialog = copy.deepcopy(dialog)
+                    newDialog["roleName"] = unknown_name
+                elif dialog["role"] == -2:
+                    newDialog = copy.deepcopy(dialog)
+                    newDialog["roleName"] = narrator_name
+                elif dialog["role"] == -3:
+                    newDialog = copy.deepcopy(dialog)
+                    newDialog["roleName"] = mate_name
                 elif dialog["role"] in [12947, 1065, 9075, 9547,]:
                     newDialog = copy.deepcopy(dialog)
                     newDialog["roleName"] = wanderer_name
@@ -280,6 +290,11 @@ def main():
         default="旅行者",
     )
     parser.add_argument(
+        "--mate_name",
+        type=str,
+        default=None,
+    )
+    parser.add_argument(
         "--wanderer_name",
         type=str,
         default="流浪者",
@@ -290,10 +305,23 @@ def main():
         default="ADMIN",
     )
     parser.add_argument(
+        "--narrator_name",
+        type=str,
+        default="旁白",
+    )
+    parser.add_argument(
+        "--unknown_name",
+        type=str,
+        default="未知",
+    )
+    parser.add_argument(
         "--not_replace_newline",
         action="store_true",
     )
     args = parser.parse_args()
+
+    if args.mate_name is None:
+        args.mate_name = "空" if args.traveller_sex == "female" else "荧"
 
     with open(args.input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -322,8 +350,10 @@ def main():
     print(f'Filtered {stats["filtered_number"]} empty traces.')
 
     print(f'Replacing characters\' names.')
-    data, stats = replace_character_names(data, args.traveller_name,
-                                          args.wanderer_name, args.system_name)
+    data, stats = replace_character_names(
+        data, args.traveller_name, args.mate_name, args.wanderer_name,
+        args.system_name, args.narrator_name, args.unknown_name,
+    )
     print(f'Replaced characters\' names.')
 
     if not args.not_replace_newline:

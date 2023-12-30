@@ -117,6 +117,23 @@ data[source_str][trace_index][sentence_index]["content"]: str
 | SEXPRO[INFO_MALE_PRONOUN_Twins2Male] | 这也是我妹妹头上的花。 | {PLAYERAVATAR#SEXPRO[INFO_MALE_PRONOUN_Twins2Male\|INFO_FEMALE_PRONOUN_Twins2Female]} | 这也是我妹妹头上的花。 |
 | SEXPRO[INFO_FEMALE_PRONOUN_Twins2Female] | 这种花自我苏醒便戴在我的头上。 | {PLAYERAVATAR#SEXPRO[INFO_MALE_PRONOUN_Twins2Male\|INFO_FEMALE_PRONOUN_Twins2Female]} | 这种花自我苏醒便戴在我的头上。 |
 
+## 附录
+
+附录中总结分析解包数据时部分值得记录的经验。
+
+### 关于talkRole
+
+对话中的`talkRole`的`type`字段取值共有如下几种：
+
+- `TALK_ROLE_NPC`：最常见的type之一，表示这句话来自NPC。
+- `TALK_ROLE_PLAYER`：最常见的type之一，表示这句话来自主角（游戏中通常表现为选项）。
+- `TALK_ROLE_BLACK_SCREEN`：这句话会以黑屏形式出现，通常是旁白。出现这种type时id通常为空。
+- `TALK_ROLE_NEED_CLICK_BLACK_SCREEN`：黑屏形式，但需要点击来到达下一句话。出现这种type时id通常为空。
+- `TALK_ROLE_CONSEQUENT_BLACK_SCREEN`：游戏中的表现效果似乎与`TALK_ROLE_BLACK_SCREEN`一致。
+- `TALK_ROLE_CONSEQUENT_NEED_CLICK_BLACK_SCREEN`：游戏中的表现效果似乎与`TALK_ROLE_NEED_CLICK_BLACK_SCREEN`一致。
+- `TALK_ROLE_GADGET`：游戏中的表现效果似乎与`TALK_ROLE_NPC`一致，且id通常有值，不需要特殊处理。
+- `TALK_ROLE_MATE_AVATAR`：这句话来自血亲，例如“我们终将重逢。”“但不用急，荧。我有足够的时间来等你。”。出现这种type时id通常为空。
+
 ## 致谢
 
 本仓库参考了[mrzjy的项目](https://github.com/mrzjy/GenshinDialog)的部分源代码和输出结果。

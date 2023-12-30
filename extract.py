@@ -195,12 +195,19 @@ def addDialog(item, talkId, path, dialogDict):
             "type" not in item["talkRole"] or \
             "id" not in item["talkRole"] or \
             (
-                item["talkRole"]["type"] != "TALK_ROLE_PLAYER" and \
+                item["talkRole"]["type"] in ["TALK_ROLE_NPC",
+                                             "TALK_ROLE_GADGET"] and \
                 not item["talkRole"]["id"].isnumeric()
             ):
         role = -1
     else:
         role = 0 if item["talkRole"]["type"] == "TALK_ROLE_PLAYER" else \
+               -2 if item["talkRole"]["type"] in \
+                    ["TALK_ROLE_BLACK_SCREEN",
+                     "TALK_ROLE_NEED_CLICK_BLACK_SCREEN",
+                     "TALK_ROLE_CONSEQUENT_BLACK_SCREEN",
+                     "TALK_ROLE_CONSEQUENT_NEED_CLICK_BLACK_SCREEN"] else \
+               -3 if item["talkRole"]["type"] == "TALK_ROLE_MATE_AVATAR" else \
                int(item["talkRole"]["id"])
     dialogItem = Dialog(**item, talkId=talkId, role=role, source=path)
     if dialogId not in dialogDict:
