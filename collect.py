@@ -11,7 +11,7 @@ TRAVELLER_AVATAR_IDS = [10000005, 10000007]
 PAIMON_NPC_ID = 1005
 PAIMON_NAME_HASH = 1356475093
 
-# system questions and answers (using variable name of the textmap hash)
+# System questions and answers (using variable name of the textmap hash).
 SYSTEM_TALKS = [
     {
         "question": "%s属于哪里？",
@@ -112,16 +112,19 @@ def findFirstDialogs(dialogDict, dialogsWithParent):
     for dialog in dialogDict.values():
         for id in dialog.nextDialogs:
             dialogsWithParent.add(id)
-    return [dialog.id for dialog in dialogDict.values() if dialog.id not in dialogsWithParent]
+    return [dialog.id for dialog in dialogDict.values()
+            if dialog.id not in dialogsWithParent]
 
 def dfsTalk(talk, results, isPlayer, stack, talkSet, dialogSet, n):
-    # stack structure: [(role, talkRoleNameTextMapHash, talkContentTextMapHash), ...]
+    # Stack structure:
+    # [(role, talkRoleNameTextMapHash, talkContentTextMapHash), ...]
     if n > 10000:
         return False
     talkSet.add(talk.id)
     if talk.initDialog != -1 and talk.initDialog in dialogDict:
         if talk.initDialog not in dialogSet:
-            dfsDialog(dialogDict[talk.initDialog], results, isPlayer, talk.nextTalks, stack, talkSet, dialogSet, n + 1)
+            dfsDialog(dialogDict[talk.initDialog], results, isPlayer,
+                      talk.nextTalks, stack, talkSet, dialogSet, n + 1)
         else:
             if not addResult(stack, results):
                 return False
@@ -134,7 +137,8 @@ def dfsTalk(talk, results, isPlayer, stack, talkSet, dialogSet, n):
                     flag = True
                 elif dialogId not in dialogSet:
                     flag = True
-                    dfsDialog(dialogDict[dialogId], results, isPlayer, talk.nextTalks, stack, talkSet, dialogSet, n + 1)
+                    dfsDialog(dialogDict[dialogId], results, isPlayer,
+                              talk.nextTalks, stack, talkSet, dialogSet, n + 1)
             if not flag:
                 if not addResult(stack, results):
                     return False
@@ -144,18 +148,24 @@ def dfsTalk(talk, results, isPlayer, stack, talkSet, dialogSet, n):
     talkSet.remove(talk.id)
     return True
 
-def dfsDialog(dialog, results, isPlayer, nextTalks, stack, talkSet, dialogSet, n):
-    # stack structure: [(role, talkRoleNameTextMapHash, talkContentTextMapHash), ...]
+def dfsDialog(dialog, results, isPlayer, nextTalks, stack, talkSet, dialogSet,
+              n):
+    # Stack structure:
+    # [(role, talkRoleNameTextMapHash, talkContentTextMapHash), ...]
     if n > 10000:
         return False
     dialogSet.add(dialog.id)
-    stack.append((0 if isPlayer else dialog.role, dialog.talkRoleNameTextMapHash, dialog.talkContentTextMapHash))
+    stack.append((0 if isPlayer else dialog.role,
+                  dialog.talkRoleNameTextMapHash,
+                  dialog.talkContentTextMapHash))
     if len(dialog.nextDialogs) > 0:
         flag = False
         for nextId in dialog.nextDialogs:
             if nextId in dialogDict and nextId not in dialogSet:
                 flag = True
-                dfsDialog(dialogDict[nextId], results, len(dialog.nextDialogs) > 1, nextTalks, stack, talkSet, dialogSet, n + 1)
+                dfsDialog(dialogDict[nextId], results,
+                          len(dialog.nextDialogs) > 1, nextTalks, stack,
+                          talkSet, dialogSet, n + 1)
         if not flag:
             if not addResult(stack, results):
                 return False
@@ -164,7 +174,8 @@ def dfsDialog(dialog, results, isPlayer, nextTalks, stack, talkSet, dialogSet, n
         for nextId in nextTalks:
             if nextId in talkDict and nextId not in talkSet:
                 flag = True
-                dfsTalk(talkDict[nextId], results, len(nextTalks) > 1, stack, talkSet, dialogSet, n + 1)
+                dfsTalk(talkDict[nextId], results, len(nextTalks) > 1, stack,
+                        talkSet, dialogSet, n + 1)
         if not flag:
             if not addResult(stack, results):
                 return False
@@ -178,8 +189,12 @@ def dfsDialog(dialog, results, isPlayer, nextTalks, stack, talkSet, dialogSet, n
 def bfs(obj):
     results = []
 
-    # bfs queue. this queue do not pop items
-    q = [(obj, int(-1), int(-1))] # (current talk/dialog, previous item in queue, parent talk (only for dialogs to obtain nextTalks))
+    # BFS queue. This queue do not pop items.
+    # Structure:
+    # [(current talk/dialog,
+    #   previous item in queue,
+    #   parent talk (only for dialogs to obtain nextTalks))]
+    q = [(obj, int(-1), int(-1))] 
 
     talkSet = set()
     dialogSet = set()
@@ -201,48 +216,60 @@ def bfs(obj):
         if isinstance(obj, Dialog):
             if prevIndex >= 0:
                 prev, _, prevParentId = q[prevIndex]
-                isPlayer = (isinstance(prev, Dialog) and len(prev.nextDialogs) > 1) or \
-                           (isinstance(prev, Talk) and prevParentId != -1 and \
+                isPlayer = (isinstance(prev, Dialog) and \
+                            len(prev.nextDialogs) > 1) or \
+                           (isinstance(prev, Talk) and \
+                            prevParentId != -1 and \
                             len(talkDict[prevParentId].nextTalks) > 0)
             else:
                 isPlayer = False
-            result.append((0 if isPlayer else obj.role, obj.talkRoleNameTextMapHash, obj.talkContentTextMapHash))
+            result.append((0 if isPlayer else obj.role,
+                           obj.talkRoleNameTextMapHash,
+                           obj.talkContentTextMapHash))
         while prevIndex >= 0:
             obj, prevIndex, _ = q[prevIndex]
             if isinstance(obj, Dialog):
                 if prevIndex >= 0:
                     prev, _, prevParentId = q[prevIndex]
-                    isPlayer = (isinstance(prev, Dialog) and len(prev.nextDialogs) > 1) or \
-                               (isinstance(prev, Talk) and prevParentId != -1 and \
+                    isPlayer = (isinstance(prev, Dialog) and \
+                                len(prev.nextDialogs) > 1) or \
+                               (isinstance(prev, Talk) and \
+                                prevParentId != -1 and \
                                 len(talkDict[prevParentId].nextTalks) > 0)
                 else:
                     isPlayer = False
-                result.append((0 if isPlayer else obj.role, obj.talkRoleNameTextMapHash, obj.talkContentTextMapHash))
+                result.append((0 if isPlayer else obj.role,
+                               obj.talkRoleNameTextMapHash,
+                               obj.talkContentTextMapHash))
         return result[::-1]
 
     i = 0
     while i < len(q):
         obj, _, parentId = q[i]
-        flag = False # whether there is any further searching paths
+        flag = False # Whether there is any further searching paths.
         if isinstance(obj, Talk):
             if obj.initDialog != -1 and obj.initDialog in dialogDict:
                 if obj.initDialog not in dialogSet:
                     flag = True
-                    if not addItem(i, obj.initDialog, dialogSet, dialogDict, obj.id):
+                    if not addItem(i, obj.initDialog, dialogSet, dialogDict,
+                                   obj.id):
                         return None
             elif obj.id in dialogDictsByTalkId:
-                firstDialogs = findFirstDialogs(dialogDictsByTalkId[obj.id], set())
+                firstDialogs = findFirstDialogs(dialogDictsByTalkId[obj.id],
+                                                set())
                 for dialogId in firstDialogs:
                     if dialogId in dialogDict and dialogId not in dialogSet:
                         flag = True
-                        if not addItem(i, dialogId, dialogSet, dialogDict, obj.id):
+                        if not addItem(i, dialogId, dialogSet, dialogDict,
+                                       obj.id):
                             return None
         else:
             if len(obj.nextDialogs) > 0:
                 for nextId in obj.nextDialogs:
                     if nextId in dialogDict and nextId not in dialogSet:
                         flag = True
-                        if not addItem(i, nextId, dialogSet, dialogDict, parentId):
+                        if not addItem(i, nextId, dialogSet, dialogDict,
+                                       parentId):
                             return None
             else:
                 for nextId in talkDict[parentId].nextTalks:
@@ -259,10 +286,12 @@ def splitTalkWithPaimon(text, paimonName):
     result = []
     for turn in text.split("\\n"):
         splits = turn.replace(": ", "：").split("：")
-        spkName, content = turn[:len(splits[0])].strip(), turn[len(splits[0]) + 1:].strip()
+        spkName = turn[:len(splits[0])].strip()
+        content = turn[len(splits[0]) + 1:].strip()
         result.append({
             "role": 0 if "{NICKNAME}" in spkName else PAIMON_NPC_ID,
-            "roleName": spkName.replace("{NICKNAME}", "`Traveller`") if "{NICKNAME}" in spkName else paimonName,
+            "roleName": spkName.replace("{NICKNAME}", "`Traveller`") \
+                        if "{NICKNAME}" in spkName else paimonName,
             "content": "#" + content,
         })
     return result
@@ -309,7 +338,9 @@ def main():
     with open(npcMapPath, "r", encoding="utf-8") as f:
         data = json.load(f)
         for item in data:
-            if "nameTextMapHash" in item and item["nameTextMapHash"] in textMap and len(textMap[item["nameTextMapHash"]]) > 0:
+            if "nameTextMapHash" in item and \
+                    item["nameTextMapHash"] in textMap and \
+                    len(textMap[item["nameTextMapHash"]]) > 0:
                 npcNameMap[item["id"]] = textMap[item["nameTextMapHash"]]
 
     with open(dataPath, "rb") as f:
@@ -331,7 +362,8 @@ def main():
         dialogsWithParent.add(talk.initDialog)
         for id in talk.nextTalks:
             talksWithParent.add(id)
-    firstTalks = [talk.id for talk in talkDict.values() if talk.id not in talksWithParent]
+    firstTalks = [talk.id for talk in talkDict.values()
+                  if talk.id not in talksWithParent]
     firstDialogs = findFirstDialogs(dialogDict, dialogsWithParent)
 
     dfsCount = 0
@@ -354,24 +386,29 @@ def main():
             for role, talkRoleNameTextMapHash, talkContentTextMapHash in result:
                 if role == 0:
                     roleName = "`Traveller`"
-                elif talkRoleNameTextMapHash in textMap and len(textMap[talkRoleNameTextMapHash]) > 0:
+                elif talkRoleNameTextMapHash in textMap and \
+                        len(textMap[talkRoleNameTextMapHash]) > 0:
                     roleName = textMap[talkRoleNameTextMapHash]
                 elif role > 0 and role in npcNameMap:
                     roleName = npcNameMap[role]
                 else:
                     roleName = "`unknown`"
-                if talkContentTextMapHash in textMap and len(textMap[talkContentTextMapHash]) > 0:
+                if talkContentTextMapHash in textMap and \
+                        len(textMap[talkContentTextMapHash]) > 0:
                     content = textMap[talkContentTextMapHash]
                 else:
                     content = "`unknown`"
-                finalDialog.append({"role": role, "roleName": roleName, "content": content})
+                finalDialog.append({"role": role,
+                                    "roleName": roleName,
+                                    "content": content})
             finalResults[f'talk_{id}'].append(finalDialog)
 
     print("Processing dialogs.")
     for id in tqdm.tqdm(firstDialogs):
         results = []
         dfsCount += 1
-        if not dfsDialog(dialogDict[id], results, False, [], [], set(), set(), 0):
+        if not dfsDialog(dialogDict[id], results, False, [], [], set(), set(),
+                         0):
             dfsCount -= 1
             bfsCount += 1
             results = bfs(dialogDict[id])
@@ -382,17 +419,21 @@ def main():
             for role, talkRoleNameTextMapHash, talkContentTextMapHash in result:
                 if role == 0:
                     roleName = "`Traveller`"
-                elif talkRoleNameTextMapHash in textMap and len(textMap[talkRoleNameTextMapHash]) > 0:
+                elif talkRoleNameTextMapHash in textMap and \
+                        len(textMap[talkRoleNameTextMapHash]) > 0:
                     roleName = textMap[talkRoleNameTextMapHash]
                 elif role > 0 and role in npcNameMap:
                     roleName = npcNameMap[role]
                 else:
                     roleName = "`unknown`"
-                if talkContentTextMapHash in textMap and len(textMap[talkContentTextMapHash]) > 0:
+                if talkContentTextMapHash in textMap and \
+                        len(textMap[talkContentTextMapHash]) > 0:
                     content = textMap[talkContentTextMapHash]
                 else:
                     content = "`unknown`"
-                finalDialog.append({"role": role, "roleName": roleName, "content": content})
+                finalDialog.append({"role": role,
+                                    "roleName": roleName,
+                                    "content": content})
             finalResults[f'dialog_{id}'].append(finalDialog)
 
     print("Processing avatar infos")
@@ -402,13 +443,16 @@ def main():
         for i, sayings in enumerate(info["sayings"]):
             topic, content = sayings
             if avatarId in TRAVELLER_AVATAR_IDS:
-                # only track dialogs from the traveller of chosen sex
+                # Only track dialogs from the traveller of chosen sex.
                 if avatarId == travellerId:
                     if content not in textMap:
                         continue
                     content_text = textMap[content]
-                    if not (("{NICKNAME}：" in content_text or "{NICKNAME}:" in content_text) and ("派蒙：" in content_text or "派蒙:" in content_text)):
-                        continue # skip traveller's skill voices
+                    if not (("{NICKNAME}：" in content_text or \
+                             "{NICKNAME}:" in content_text) and \
+                            ("派蒙：" in content_text or \
+                             "派蒙:" in content_text)):
+                        continue # Skip traveller's skill voices.
                     trace = splitTalkWithPaimon(content_text, paimonName)
                     finalResults[f'avatar_{avatarId}_sayings_{i + 1}'] = [trace]
             else:
@@ -421,18 +465,21 @@ def main():
                         "content": textMap[topic],
                     },
                     {
-                        "role": -1, # we only know the avatarId, not the npcId
-                        "roleName": textMap[info["name"]] if info["name"] in textMap else "`unknown`",
+                        "role": -1, # We only know the avatarId, not the npcId.
+                        "roleName": textMap[info["name"]] \
+                                    if info["name"] in textMap else "`unknown`",
                         "content": textMap[content],
                     },
                 ]]
-        # add other info as talks
-        avatarName = textMap[info["name"]] if info["name"] in textMap else "`unknown`"
+        # Add other info as talks.
+        avatarName = textMap[info["name"]] if info["name"] in textMap else \
+                     "`unknown`"
         if avatarId in TRAVELLER_AVATAR_IDS:
-            avatarName = "{NICKNAME}" # will be replaced later in clean_text.py
+            avatarName = "{NICKNAME}" # Will be replaced later in clean_text.py
         for i, item in enumerate(SYSTEM_TALKS):
             args = [getAttr(info, key) for key in item["args"]]
-            args_text = [textMap[item] if item in textMap else None for item in args]
+            args_text = [textMap[item] if item in textMap else None
+                         for item in args]
             if all(args):
                 finalResults[f'avatar_{avatarId}_system_{i + 1}'] = [[
                     {

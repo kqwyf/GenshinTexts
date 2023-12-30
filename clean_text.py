@@ -49,7 +49,8 @@ def filter_unreleased_talks(data):
         for trace in data[key]:
             newTrace = []
             for dialog in trace:
-                if all([tag not in dialog["content"].lower() for tag in UNRELEASED_TAGS]):
+                if all([tag not in dialog["content"].lower()
+                        for tag in UNRELEASED_TAGS]):
                     newTrace.append(dialog)
                 else:
                     filtered_number += 1
@@ -166,20 +167,24 @@ def replace_placeholders(data, traveller_sex, traveller_name, wanderer_name):
                             if first in ["PLAYERAVATAR", "MATEAVATAR"]:
                                 assert second.endswith("]"), second
                                 category, choices_str = second[:-1].split("[")
-                                output = [PLACEHOLDERS[category][choice] for choice in choices_str.split("|")][sex[first]]
+                                output = [PLACEHOLDERS[category][choice]
+                                          for choice in \
+                                          choices_str.split("|")][sex[first]]
                             elif (first == "M" and traveller_sex == "male") or \
                                (first == "F" and traveller_sex == "female"):
                                 output = second
                             else:
                                 assert first in ["M", "F"], first
                                 output = ""
-                        elif placeholder in ["REALNAME[ID(1)|HOSTONLY(true)]", "REALNAME[ID(1)]"]: # wanderer
+                        elif placeholder in ["REALNAME[ID(1)|HOSTONLY(true)]",
+                                             "REALNAME[ID(1)]"]: # Wanderer
                             output = wanderer_name
                         else:
                             assert placeholder == "NICKNAME", content
                             output = traveller_name
-                        content = content.replace("{" + placeholder + "}", output)
-                    content = content[1:] # remove '#' at the beginning
+                        content = content.replace("{" + placeholder + "}",
+                                                  output)
+                    content = content[1:] # Remove '#' at the beginning
                 for match in RUBY_PATTERN.findall(content):
                     num_placeholders += 1
                     content = content.replace("{RUBY#[D]" + match + "}", "")
@@ -295,18 +300,21 @@ def main():
 
     print(f'Filtering talks containing unknown content.')
     data, stats = filter_unknown_dialogs(data)
-    print(f'Filtered {stats["filtered_number"]} traces containing unknown content.')
+    print(f'Filtered {stats["filtered_number"]} traces containing unknown '
+          'content.')
 
     print(f'Filtering dialogs containing UNRELEASED or test tags.')
     data, stats = filter_unreleased_talks(data)
-    print(f'Filtered {stats["filtered_number"]} dialogs containing UNRELEASED or test tags.')
+    print(f'Filtered {stats["filtered_number"]} dialogs containing UNRELEASED '
+          'or test tags.')
 
     print(f'Removing XML tags.')
     data, stats = remove_xml_tags(data)
     print(f'Removed XML tags.')
 
     print(f'Replacing placeholders.')
-    data, stats = replace_placeholders(data, args.traveller_sex, args.traveller_name, args.wanderer_name)
+    data, stats = replace_placeholders(data, args.traveller_sex,
+                                       args.traveller_name, args.wanderer_name)
     print(f'Replaced {stats["num_placeholders"]} placeholders.')
 
     print(f'Filtering empty traces.')
@@ -314,7 +322,8 @@ def main():
     print(f'Filtered {stats["filtered_number"]} empty traces.')
 
     print(f'Replacing characters\' names.')
-    data, stats = replace_character_names(data, args.traveller_name, args.wanderer_name, args.system_name)
+    data, stats = replace_character_names(data, args.traveller_name,
+                                          args.wanderer_name, args.system_name)
     print(f'Replaced characters\' names.')
 
     if not args.not_replace_newline:
