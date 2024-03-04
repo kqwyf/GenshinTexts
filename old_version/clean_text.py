@@ -234,7 +234,7 @@ def replace_character_names(data, traveller_name, mate_name, wanderer_name,
                 elif dialog["role"] == 0:
                     newDialog = copy.deepcopy(dialog)
                     newDialog["roleName"] = traveller_name
-                elif dialog["role"] == -1 or dialog["roleName"] == "`unknown`":
+                elif dialog["roleName"] == "`unknown`":
                     newDialog = copy.deepcopy(dialog)
                     newDialog["roleName"] = unknown_name
                 elif dialog["role"] == -2:
