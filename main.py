@@ -1831,6 +1831,7 @@ class Database:
 
         # Export dialogs.
         logging.info(f'Exporting dialogs to {filepath}')
+        valid_source_names = set()
         for source_name, source in tqdm.tqdm(self.source_dict.items()):
             source_item = {}
             source_item["quest_id"] = source.quest_id
@@ -1925,6 +1926,27 @@ class Database:
             source_item["traces"] = traces_item
             if len(traces_item) > 0:
                 result[source_name] = source_item
+                valid_source_names.add(source_name)
+
+        # Remove invalid sources from prev_sources and next_sources.
+        logging.info(f'Removing invalid sources.')
+        for source_item in tqdm.tqdm(result.values()):
+            source_item["prev_sources"] = [
+                s for s in source_item["prev_sources"]
+                if s in valid_source_names
+            ]
+            source_item["prev_sources_optional"] = [
+                s for s in source_item["prev_sources_optional"]
+                if s in valid_source_names
+            ]
+            source_item["next_sources"] = [
+                s for s in source_item["next_sources"]
+                if s in valid_source_names
+            ]
+            source_item["next_sources_optional"] = [
+                s for s in source_item["next_sources_optional"]
+                if s in valid_source_names
+            ]
 
         # Export avatar voice texts.
         logging.info(f'Exporting avatar voice texts to {filepath}')
@@ -2214,6 +2236,7 @@ class Database:
 
         quests = {}
         quest_ids = sorted(self.quest_dict.keys())
+        valid_quest_ids = set()
         for quest_id in quest_ids:
             quest = self.quest_dict[quest_id]
             title = self.text_map.get(quest.title_text_map_hash, unknown_text)
@@ -2264,9 +2287,11 @@ class Database:
                 "prev_quest_ids": sorted(quest.prev_quests),
                 "next_quest_ids": sorted(quest.next_quests),
             }
+            valid_quest_ids.add(quest_id)
 
         subquests = {}
         subquest_ids = sorted(self.subquest_dict.keys())
+        valid_subquest_ids = set()
         for subquest_id in subquest_ids:
             subquest = self.subquest_dict[subquest_id]
             description = self.text_map.get(subquest.desc_text_map_hash,
@@ -2332,6 +2357,19 @@ class Database:
                 "description": description,
                 "step_description": step_description,
             }
+            valid_subquest_ids.add(subquest_id)
+
+        # Remove invalid quests and subquests.
+        for quest_item in quests.values():
+            quest_item["subquest_ids"] = [
+                s for s in quest_item["subquest_ids"] if s in valid_subquest_ids
+            ]
+            quest_item["prev_quest_ids"] = [
+                s for s in quest_item["prev_quest_ids"] if s in valid_quest_ids
+            ]
+            quest_item["next_quest_ids"] = [
+                s for s in quest_item["next_quest_ids"] if s in valid_quest_ids
+            ]
 
         result = {
             "chapters": chapters,
